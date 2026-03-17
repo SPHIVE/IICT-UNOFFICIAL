@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>INDIAN INSTITUTE OF CARPET TECHNOLOGY</title>
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
+
+/* Animated Gradient Background */
+body{
+  min-height:100vh;
+  background: linear-gradient(270deg, #141e30, #243b55, #0f2027);
+  background-size: 600% 600%;
+  animation: GradientAnimation 15s ease infinite;
+  color:white;
+}
+
+/* Navbar */
+nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 40px;
+  background:rgba(0,0,0,0.5);
+}
+nav h1{ font-size:22px; }
+nav ul{
+  display:flex;
+  list-style:none;
+}
+nav ul li{
+  margin:0 12px;
+  cursor:pointer;
+  transition:0.3s;
+}
+nav ul li:hover{ color:#00c6ff; }
+nav button{
+  padding:8px 18px;
+  border:none;
+  border-radius:20px;
+  background:white;
+  cursor:pointer;
+  transition:0.3s;
+}
+nav button:hover{ background:#e0e0e0; }
+
+/* Gallery */
+.gallery{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-top:30px;
+}
+.card{
+  background:rgba(255,255,255,0.15);
+  backdrop-filter:blur(5px);
+  margin:15px;
+  padding:10px;
+  border-radius:10px;
+  width:180px;
+  text-align:center;
+  transition:0.3s;
+}
+.card:hover{ transform: scale(1.05); }
+.card img{
+  width:160px;
+  height:160px;
+  object-fit:cover;
+  border-radius:10px;
+}
+.deleteBtn{
+  margin-top:8px;
+  padding:5px 10px;
+  border:none;
+  background:red;
+  color:white;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+
+/* Upload Panel */
+.uploadPanel{
+  display:none;
+  text-align:center;
+  margin-top:25px;
+}
+.uploadPanel input, select{
+  padding:10px;
+  margin:10px;
+}
+
+/* Login Popup */
+.loginBox{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:white;
+  color:black;
+  padding:25px;
+  border-radius:10px;
+  display:none;
+}
+.loginBox input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+}
+
+/* Gradient animation keyframes */
+@keyframes GradientAnimation {
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+</style>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+
+</head>
+
+<div id="editorBox" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+padding:20px;
+z-index:1000;
+width:420px;
+max-height:90vh;
+overflow:auto;
+text-align:center;
+border-radius:10px;
+">
+
+<h3>Edit Image</h3>
+
+<img id="editImage" style="max-width:100%; max-height:300px;">
+
+<br><br>
+
+<button onclick="cropImage()">Save</button>
+<button onclick="closeEditor()">Cancel</button>
+
+</div>
+
+
+<body>
+
+<!-- Navbar -->
+<nav>
+  <h1> IICT UNOFFICIAL</h1>
+  <ul>
+    <li onclick="showSection('classmates')">Classmates</li>
+    <li onclick="showSection('2year')">2nd Year</li>
+    <li onclick="showSection('3year')">3rd Year</li>
+    <li onclick="showSection('final')">Final Year</li>
+    <li onclick="showSection('super')">Super Seniors</li>
+    <li onclick="showSection('faculty')">Faculty</li>
+  </ul>
+  <button onclick="openLogin()">Login</button>
+</nav>
+
+<!-- Upload Panel -->
+<div class="uploadPanel" id="uploadPanel">
+  <h2>Upload Photo</h2>
+  <input type="text" id="name" placeholder="Enter Name">
+  <select id="category">
+    <option value="classmates">Classmates</option>
+    <option value="2year">2nd Year</option>
+    <option value="3year">3rd Year</option>
+    <option value="final">Final Year</option>
+    <option value="super">Super Seniors</option>
+    <option value="faculty">Faculty</option>
+  </select>
+  <br>
+  <input type="file" id="image">
+  <br>
+  <button onclick="upload()">Upload</button>
+</div>
+
+<!-- Login -->
+<div class="loginBox" id="loginBox">
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- Gallery -->
+<div class="gallery" id="gallery"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCgDz5vb8FDAKHs7pfxXvBbZgY9MsPZglA",
+    authDomain: "unofficial-iict.firebaseapp.com",
+    projectId: "unofficial-iict",
+    storageBucket: "unofficial-iict.firebasestorage.app",
+    messagingSenderId: "215815610063",
+    appId: "1:215815610063:web:8eb40233844fb8306be1ba"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let cropper;
+let editingDocId;
+
+  // Cloudinary config
+  const CLOUD_NAME = "doeseaxpz";
+  const UPLOAD_PRESET = "unofficial_iict_unsigned";
+
+  let currentSection="classmates";
+  let isLogged=false;
+
+  function showSection(section){
+    currentSection=section;
+    loadImages();
+  }
+
+  function openLogin(){
+    document.getElementById("loginBox").style.display="block";
+  }
+
+  function login(){
+    let user=document.getElementById("username").value;
+    let pass=document.getElementById("password").value;
+    if(user==="Saurya" && pass==="9142"){
+      isLogged=true;
+      document.getElementById("loginBox").style.display="none";
+      document.getElementById("uploadPanel").style.display="block";
+      loadImages();
+    } else {
+      alert("Wrong login");
+    }
+  }
+
+  // Upload to Cloudinary + Firestore
+  function upload(){
+    let name=document.getElementById("name").value;
+    let file=document.getElementById("image").files[0];
+    let category=document.getElementById("category").value;
+
+    if(!name || !file){
+      alert("Name and image required!");
+      return;
+    }
+    const formData=new FormData();
+    formData.append("file",file);
+    formData.append("upload_preset",UPLOAD_PRESET);
+
+    fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`,{
+      method:"POST",
+      body:formData
+    })
+    .then(res=>res.json())
+    .then(data=>{
+      const imgURL=data.secure_url;
+      db.collection("gallery").add({
+        name:name,
+        category:category,
+        img:imgURL,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      }).then(()=>{
+        console.log("Upload successful");
+        loadImages();
+      }).catch(err=>console.error("Firestore save error:",err));
+    }).catch(err=>console.error("Cloudinary upload error:",err));
+  }
+
+
+      function openEditor(imgUrl, docId){
+
+editingDocId = docId;
+
+document.getElementById("editorBox").style.display="block";
+
+const image=document.getElementById("editImage");
+
+image.src=imgUrl;
+
+if(cropper){
+cropper.destroy();
+}
+
+cropper = new Cropper(image,{
+aspectRatio:1,
+viewMode:1
+});
+
+}
+
+ function closeEditor(){
+document.getElementById("editorBox").style.display="none";
+}
+
+  function loadImages(){
+    const gallery=document.getElementById("gallery");
+    gallery.innerHTML="";
+    db.collection("gallery").orderBy("timestamp","desc").get()
+      .then(snapshot=>{
+        snapshot.forEach(doc=>{
+          const data=doc.data();
+          if(data.category===currentSection){
+            const card=document.createElement("div");
+            card.className="card";
+
+            const img=document.createElement("img");
+            img.src=data.img;
+
+            const nameEl=document.createElement("h3");
+            nameEl.innerText=data.name;
+
+            card.appendChild(img);
+            card.appendChild(nameEl);
+
+            if(isLogged){
+              const delBtn=document.createElement("button");
+              const editBtn=document.createElement("button");
+editBtn.innerText="Edit";
+
+editBtn.onclick=()=>{
+openEditor(data.img, doc.id);
+};
+
+card.appendChild(editBtn);
+              delBtn.className="deleteBtn";
+              delBtn.innerText="Delete";
+              delBtn.onclick=()=> {
+                db.collection("gallery").doc(doc.id).delete().then(()=>loadImages());
+              };
+              card.appendChild(delBtn);
+            }
+
+            gallery.appendChild(card);
+          }
+        });
+      }).catch(err=>console.error("Firestore fetch error:",err));
+  }
+
+  window.onload=loadImages;
+
+function cropImage(){
+
+const canvas=cropper.getCroppedCanvas();
+
+canvas.toBlob((blob)=>{
+
+const formData=new FormData();
+
+formData.append("file",blob);
+formData.append("upload_preset","unofficial_iict_unsigned");
+
+fetch("https://api.cloudinary.com/v1_1/doeseaxpz/upload",{
+method:"POST",
+body:formData
+})
+.then(res=>res.json())
+.then(data=>{
+
+const newURL=data.secure_url;
+
+db.collection("gallery").doc(editingDocId).update({
+img:newURL
+}).then(()=>{
+
+closeEditor();
+loadImages();
+
+});
+
+});
+
+});
+
+}
+
+
+
+</script>
+</body>
+</html>
