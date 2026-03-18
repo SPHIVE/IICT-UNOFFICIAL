@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>INDIAN INSTITUTE OF CARPET TECHNOLOGY</title>
+<title>ITCT UNOFFICIAL</title>
 <style>
 *{
   margin:0;
@@ -47,6 +47,10 @@ nav button{
   transition:0.3s;
 }
 nav button:hover{ background:#e0e0e0; }
+
+
+
+
 
 /* Gallery */
 .gallery{
@@ -118,6 +122,8 @@ nav button:hover{ background:#e0e0e0; }
   50%{background-position:100% 50%;}
   100%{background-position:0% 50%;}
 }
+
+
 </style>
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
@@ -166,6 +172,8 @@ border-radius:10px;
     <li onclick="showSection('final')">Final Year</li>
     <li onclick="showSection('super')">Super Seniors</li>
     <li onclick="showSection('faculty')">Faculty</li>
+     <li onclick="showSection('About')">About</li>
+
   </ul>
   <button onclick="openLogin()">Login</button>
 </nav>
@@ -181,13 +189,13 @@ border-radius:10px;
     <option value="final">Final Year</option>
     <option value="super">Super Seniors</option>
     <option value="faculty">Faculty</option>
+    <option value="About">About</option>
   </select>
   <br>
   <input type="file" id="image">
   <br>
   <button onclick="upload()">Upload</button>
 </div>
-
 <!-- Login -->
 <div class="loginBox" id="loginBox">
   <h2>Admin Login</h2>
@@ -198,6 +206,18 @@ border-radius:10px;
 
 <!-- Gallery -->
 <div class="gallery" id="gallery"></div>
+
+<div class="gallery" id="gallery"></div>
+
+<!-- About Section -->
+<div id="aboutSection" style="display:none; text-align:center; padding:30px;">
+  <h2>About IICT Unofficial</h2>
+  <p>
+    Ye ek unofficial website hai jahan IICT ke students ki photos aur memories store ki jaati hain.
+    Iska purpose hai ki sabhi students ek jagah connected rahein aur apni yaadein share karein.
+  </p>
+</div>
+
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -227,10 +247,19 @@ let editingDocId;
   let currentSection="classmates";
   let isLogged=false;
 
-  function showSection(section){
-    currentSection=section;
+ function showSection(section){
+  currentSection = section;
+
+  // agar About click hua
+  if(section === "About"){
+    document.getElementById("aboutSection").style.display = "block";
+    document.getElementById("gallery").style.display = "none";
+  } else {
+    document.getElementById("aboutSection").style.display = "none";
+    document.getElementById("gallery").style.display = "flex";
     loadImages();
   }
+}
 
   function openLogin(){
     document.getElementById("loginBox").style.display="block";
